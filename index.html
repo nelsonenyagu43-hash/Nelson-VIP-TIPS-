@@ -53,7 +53,7 @@
     .topbar-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       min-width: 0;
     }
 
@@ -177,8 +177,7 @@
     }
 
     input,
-    select,
-    textarea {
+    select {
       background: var(--bg);
       color: var(--text);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -190,8 +189,7 @@
     }
 
     input:focus,
-    select:focus,
-    textarea:focus {
+    select:focus {
       border-color: var(--orange-1);
     }
 
@@ -219,6 +217,11 @@
       transform: scale(0.98);
     }
 
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .btn-primary {
       background: linear-gradient(135deg, var(--orange-1), var(--orange-2));
       color: var(--text);
@@ -227,11 +230,6 @@
 
     .btn-secondary {
       background: rgba(255, 255, 255, 0.08);
-      color: var(--text);
-    }
-
-    .btn-teal {
-      background: linear-gradient(135deg, var(--teal-1), var(--teal-2));
       color: var(--text);
     }
 
@@ -341,20 +339,6 @@
       border-radius: 8px;
     }
 
-    .io-box {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    textarea.json-area {
-      min-height: 150px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
     .empty-state {
       color: var(--muted);
       font-size: 14px;
@@ -401,8 +385,8 @@
     </div>
     <label class="date-box" title="Select Date">
       <span>📅</span>
-      <span id="dateLabel">2026 - Nov 24</span>
-      <input id="dateInput" type="date" value="2026-11-24" />
+      <span id="dateLabel">2026 - Nov 25</span>
+      <input id="dateInput" type="date" value="2026-11-25" />
     </label>
   </header>
 
@@ -422,7 +406,6 @@
       </div>
     </div>
 
-    <!-- ADD / EDIT MATCH FORM -->
     <section class="panel">
       <div class="panel-title">
         <span id="formTitle">Add New Selection</span>
@@ -441,7 +424,7 @@
           </div>
           <div class="field">
             <label for="matchDateInput">Date</label>
-            <input id="matchDateInput" type="date" value="2026-11-24" required />
+            <input id="matchDateInput" type="date" value="2026-11-25" required />
           </div>
           <div class="field">
             <label for="leagueInput">League / Competition</label>
@@ -479,10 +462,10 @@
       </form>
     </section>
 
-    <!-- MATCH LIST FOR SELECTED DATE -->
     <section class="panel">
       <div class="panel-title">
-        <span>Selections (<span id="listDateText">2026 - Nov 24</span>)</span>
+        <span>Live Selections (<span id="listDateText">2026 - Nov 25</span>)</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="refreshMatches()">Refresh</button>
       </div>
       <div class="filter-bar" id="filterBar">
         <button type="button" class="chip active" data-filter="All">All</button>
@@ -490,99 +473,18 @@
         <button type="button" class="chip" data-filter="Daily Surprise">Daily Surprise</button>
         <button type="button" class="chip" data-filter="Premium VIP Tips">Premium VIP Tips</button>
       </div>
-      <div id="matchesList"></div>
-    </section>
-
-    <!-- EXPORT / IMPORT JSON FOR APP -->
-    <section class="panel">
-      <div class="panel-title">
-        <span>Data Export / Import</span>
-      </div>
-      <div class="io-box">
-        <button type="button" class="btn btn-teal btn-sm" id="copyArrayBtn">Copy ALL_MATCHES JS</button>
-        <button type="button" class="btn btn-secondary btn-sm" id="exportJsonBtn">Export JSON</button>
-        <button type="button" class="btn btn-secondary btn-sm" id="importJsonBtn">Load JSON from Box</button>
-        <button type="button" class="btn btn-danger btn-sm" id="resetDefaultBtn">Reset Default</button>
-      </div>
-      <textarea id="jsonBox" class="json-area" spellcheck="false" placeholder="JSON or ALL_MATCHES array appears here..."></textarea>
+      <div id="matchesList"><div class="empty-state">Loading from Supabase...</div></div>
     </section>
   </main>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    const DEFAULT_MATCHES = [
-      {
-        "id": "p_1",
-        "section": "Daily Free Tips",
-        "date": "2026-11-24",
-        "league": "Premier League",
-        "time": "19:30",
-        "match": "Arsenal vs Chelsea",
-        "pick": "Over 1.5 Goals",
-        "odds": "1.35",
-        "status": "Pending"
-      },
-      {
-        "id": "p_2",
-        "section": "Daily Free Tips",
-        "date": "2026-11-24",
-        "league": "La Liga",
-        "time": "21:00",
-        "match": "Real Madrid vs Villarreal",
-        "pick": "Home Win",
-        "odds": "1.62",
-        "status": "Won"
-      },
-      {
-        "id": "p_3",
-        "section": "Daily Surprise",
-        "date": "2026-11-24",
-        "league": "Serie A",
-        "time": "20:45",
-        "match": "Inter Milan vs Napoli",
-        "pick": "BTTS - Yes & Over 2.5",
-        "odds": "2.15",
-        "status": "Pending"
-      },
-      {
-        "id": "p_4",
-        "section": "Premium VIP Tips",
-        "date": "2026-11-24",
-        "league": "UEFA Champions League",
-        "time": "21:00",
-        "match": "Bayern Munich vs PSG",
-        "pick": "Home Win & BTTS",
-        "odds": "3.10",
-        "status": "Pending"
-      },
-      {
-        "id": "p_5",
-        "section": "Premium VIP Tips",
-        "date": "2026-11-24",
-        "league": "Bundesliga",
-        "time": "18:30",
-        "match": "Bayer Leverkusen vs RB Leipzig",
-        "pick": "Correct Score 2-1",
-        "odds": "8.50",
-        "status": "Pending"
-      }
-    ];
+    const SUPABASE_BASE_URL = "https://gejcimbqytsyhzyoiobz.supabase.co/rest/v1";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_xPplWldmHxn11fmRt8lDpw_Cp0U7Kag";
+    const SUPABASE_TABLE = "Bet%20vip";
 
-    const STORAGE_KEY = "betting_solutions_matches_v1";
-
-    function loadMatches() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [...DEFAULT_MATCHES];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [...DEFAULT_MATCHES];
-      } catch {
-        return [...DEFAULT_MATCHES];
-      }
-    }
-
-    let matches = loadMatches();
+    let matches = [];
     let activeFilter = "All";
 
     const dateInput = document.getElementById("dateInput");
@@ -604,7 +506,6 @@
     const editingBadge = document.getElementById("editingBadge");
     const matchesList = document.getElementById("matchesList");
     const filterBar = document.getElementById("filterBar");
-    const jsonBox = document.getElementById("jsonBox");
     const toast = document.getElementById("toast");
 
     function showToast(msg) {
@@ -622,23 +523,46 @@
       return `${y} - ${monthName} ${dayStr}`;
     }
 
-    function saveMatches() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(matches));
-      render();
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = String(str ?? "");
+      return div.innerHTML;
     }
 
-    function nextId() {
-      const nums = matches
-        .map(m => parseInt(String(m.id || "").replace(/\D+/g, ""), 10))
-        .filter(n => !Number.isNaN(n));
-      const maxNum = nums.length ? Math.max(...nums) : 0;
-      return `p_${maxNum + 1}`;
+    async function sbFetch(queryPath, options = {}) {
+      const cleanBase = SUPABASE_BASE_URL.replace(/\/+$/, "");
+      const res = await fetch(`${cleanBase}/${SUPABASE_TABLE}${queryPath}`, {
+        ...options,
+        headers: {
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+          ...(options.headers || {})
+        }
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `HTTP ${res.status}`);
+      }
+      if (res.status === 204) return [];
+      return res.json();
+    }
+
+    async function refreshMatches() {
+      const activeDate = dateInput.value || "2026-11-25";
+      try {
+        matches = await sbFetch(`?date=eq.${encodeURIComponent(activeDate)}&order=time.asc`);
+        render();
+      } catch (err) {
+        matchesList.innerHTML = `<div class="empty-state" style="color:#ff8a8e;">Failed to connect to Supabase: ${escapeHtml(err.message)}</div>`;
+      }
     }
 
     function resetForm() {
       matchIdInput.value = "";
       sectionInput.value = "Daily Free Tips";
-      matchDateInput.value = dateInput.value || "2026-11-24";
+      matchDateInput.value = dateInput.value || "2026-11-25";
       leagueInput.value = "";
       timeInput.value = "19:30";
       matchInput.value = "";
@@ -652,7 +576,7 @@
     }
 
     function startEdit(id) {
-      const item = matches.find(m => m.id === id);
+      const item = matches.find(m => String(m.id) === String(id));
       if (!item) return;
       matchIdInput.value = item.id;
       sectionInput.value = item.section;
@@ -663,48 +587,48 @@
       pickInput.value = item.pick;
       oddsInput.value = item.odds;
       statusInput.value = item.status || "Pending";
-      formTitle.textContent = `Edit Selection (${item.id})`;
+      formTitle.textContent = "Edit Selection";
       submitBtn.textContent = "Update Selection";
       cancelEditBtn.style.display = "inline-flex";
       editingBadge.style.display = "inline";
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function deleteMatch(id) {
-      matches = matches.filter(m => m.id !== id);
-      if (matchIdInput.value === id) resetForm();
-      saveMatches();
-      showToast("Selection deleted");
+    async function deleteMatch(id) {
+      try {
+        await sbFetch(`?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+        if (String(matchIdInput.value) === String(id)) resetForm();
+        showToast("Deleted from Supabase");
+        await refreshMatches();
+      } catch (err) {
+        showToast("Delete failed: " + err.message);
+      }
     }
 
-    function updateStatus(id, newStatus) {
-      const item = matches.find(m => m.id === id);
-      if (!item) return;
-      item.status = newStatus;
-      saveMatches();
-      showToast(`Status set to ${newStatus}`);
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+    async function updateStatus(id, newStatus) {
+      try {
+        await sbFetch(`?id=eq.${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: newStatus })
+        });
+        showToast(`Status: ${newStatus}`);
+        await refreshMatches();
+      } catch (err) {
+        showToast("Status update failed: " + err.message);
+      }
     }
 
     function render() {
-      const activeDate = dateInput.value || "2026-11-24";
+      const activeDate = dateInput.value || "2026-11-25";
       const formattedDate = formatDisplayDate(activeDate);
       dateLabel.textContent = formattedDate;
       listDateText.textContent = formattedDate;
 
-      const dateMatches = matches.filter(m => m.date === activeDate);
-      document.getElementById("statDateTotal").textContent = dateMatches.length;
-      document.getElementById("statVipTotal").textContent = dateMatches.filter(m => m.section === "Premium VIP Tips").length;
-      document.getElementById("statWonTotal").textContent = dateMatches.filter(m => m.status === "Won").length;
+      document.getElementById("statDateTotal").textContent = matches.length;
+      document.getElementById("statVipTotal").textContent = matches.filter(m => m.section === "Premium VIP Tips").length;
+      document.getElementById("statWonTotal").textContent = matches.filter(m => m.status === "Won").length;
 
-      const visible = dateMatches.filter(m => activeFilter === "All" || m.section === activeFilter);
+      const visible = matches.filter(m => activeFilter === "All" || m.section === activeFilter);
 
       if (!visible.length) {
         matchesList.innerHTML = `<div class="empty-state">No selections for ${escapeHtml(formattedDate)}${activeFilter !== "All" ? ` in ${escapeHtml(activeFilter)}` : ""}.</div>`;
@@ -723,23 +647,24 @@
             <span class="tip-odds">@ ${escapeHtml(item.odds)}</span>
           </div>
           <div class="item-actions">
-            <select class="status-select" aria-label="Status" onchange="updateStatus('${item.id}', this.value)">
+            <select class="status-select" aria-label="Status" onchange="updateStatus('${escapeHtml(item.id)}', this.value)">
               <option value="Pending" ${item.status === "Pending" ? "selected" : ""}>Pending</option>
               <option value="Won" ${item.status === "Won" ? "selected" : ""}>Won</option>
               <option value="Lost" ${item.status === "Lost" ? "selected" : ""}>Lost</option>
             </select>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="startEdit('${item.id}')">Edit</button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="deleteMatch('${item.id}')">Delete</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="startEdit('${escapeHtml(item.id)}')">Edit</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteMatch('${escapeHtml(item.id)}')">Delete</button>
           </div>
         </div>
       `).join("");
     }
 
-    matchForm.addEventListener("submit", (e) => {
+    matchForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+      submitBtn.disabled = true;
       const existingId = matchIdInput.value;
       const entry = {
-        id: existingId || nextId(),
+        id: existingId || `p_${Date.now()}`,
         section: sectionInput.value,
         date: matchDateInput.value,
         league: leagueInput.value.trim(),
@@ -750,29 +675,41 @@
         status: statusInput.value
       };
 
-      if (existingId) {
-        matches = matches.map(m => (m.id === existingId ? entry : m));
-        showToast("Selection updated");
-      } else {
-        matches.push(entry);
-        showToast("Selection added");
-      }
+      try {
+        if (existingId) {
+          await sbFetch(`?id=eq.${encodeURIComponent(existingId)}`, {
+            method: "PATCH",
+            body: JSON.stringify(entry)
+          });
+          showToast("Selection updated live");
+        } else {
+          await sbFetch("", {
+            method: "POST",
+            body: JSON.stringify(entry)
+          });
+          showToast("Selection published live");
+        }
 
-      if (entry.date && entry.date !== dateInput.value) {
-        dateInput.value = entry.date;
-      }
+        if (entry.date && entry.date !== dateInput.value) {
+          dateInput.value = entry.date;
+        }
 
-      resetForm();
-      saveMatches();
+        resetForm();
+        await refreshMatches();
+      } catch (err) {
+        showToast("Save error: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
 
     cancelEditBtn.addEventListener("click", resetForm);
 
-    dateInput.addEventListener("change", () => {
+    dateInput.addEventListener("change", async () => {
       if (!matchIdInput.value) {
         matchDateInput.value = dateInput.value;
       }
-      render();
+      await refreshMatches();
     });
 
     filterBar.addEventListener("click", (e) => {
@@ -783,50 +720,7 @@
       render();
     });
 
-    document.getElementById("exportJsonBtn").addEventListener("click", () => {
-      jsonBox.value = JSON.stringify(matches, null, 2);
-      showToast("Exported JSON");
-    });
-
-    document.getElementById("copyArrayBtn").addEventListener("click", async () => {
-      const code = `const ALL_MATCHES = ${JSON.stringify(matches, null, 2)};`;
-      jsonBox.value = code;
-      try {
-        await navigator.clipboard.writeText(code);
-        showToast("Copied ALL_MATCHES to clipboard");
-      } catch {
-        jsonBox.select();
-        document.execCommand("copy");
-        showToast("Copied ALL_MATCHES");
-      }
-    });
-
-    document.getElementById("importJsonBtn").addEventListener("click", () => {
-      let raw = jsonBox.value.trim();
-      if (!raw) {
-        showToast("Paste JSON first");
-        return;
-      }
-      raw = raw.replace(/^const\s+ALL_MATCHES\s*=\s*/, "").replace(/;\s*$/, "");
-      try {
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) throw new Error("Must be an array");
-        matches = parsed;
-        saveMatches();
-        showToast("Imported selections");
-      } catch {
-        showToast("Invalid JSON array");
-      }
-    });
-
-    document.getElementById("resetDefaultBtn").addEventListener("click", () => {
-      matches = [...DEFAULT_MATCHES];
-      resetForm();
-      saveMatches();
-      showToast("Reset to default selections");
-    });
-
-    render();
+    refreshMatches();
   </script>
 </body>
 </html>
