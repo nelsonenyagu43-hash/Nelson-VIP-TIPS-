@@ -245,6 +245,30 @@
       border-radius: 8px;
     }
 
+    .vip-test-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .vip-test-row input {
+      flex: 1;
+    }
+
+    .vip-test-result {
+      margin-top: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .vip-note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
     .filter-bar {
       display: flex;
       gap: 8px;
@@ -464,6 +488,18 @@
 
     <section class="panel">
       <div class="panel-title">
+        <span>VIP Code RPC Check</span>
+      </div>
+      <div class="vip-test-row">
+        <input id="testVipCodeInput" type="text" placeholder="Test code e.g. VIP2026" autocomplete="off" />
+        <button type="button" class="btn btn-secondary" id="testVipCodeBtn" onclick="checkVipCodeRpc()">Verify</button>
+      </div>
+      <div id="vipTestResult" class="vip-test-result">Enter a code to test verify_vip_code.</div>
+      <p class="vip-note">Add, enable, or disable codes directly in Supabase SQL Editor on <code>public.vip_codes</code> while RLS keeps codes hidden from public table reads.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
         <span>Live Selections (<span id="listDateText">2026 - Nov 25</span>)</span>
         <button type="button" class="btn btn-secondary btn-sm" onclick="refreshMatches()">Refresh</button>
       </div>
@@ -507,6 +543,9 @@
     const matchesList = document.getElementById("matchesList");
     const filterBar = document.getElementById("filterBar");
     const toast = document.getElementById("toast");
+    const testVipCodeInput = document.getElementById("testVipCodeInput");
+    const testVipCodeBtn = document.getElementById("testVipCodeBtn");
+    const vipTestResult = document.getElementById("vipTestResult");
 
     function showToast(msg) {
       toast.textContent = msg;
@@ -527,6 +566,51 @@
       const div = document.createElement("div");
       div.textContent = String(str ?? "");
       return div.innerHTML;
+    }
+
+    async function checkVipCodeRpc() {
+      const code = testVipCodeInput.value.trim();
+      if (!code) {
+        vipTestResult.style.color = "#ff8a8e";
+        vipTestResult.textContent = "Enter a VIP code first.";
+        return;
+      }
+
+      testVipCodeBtn.disabled = true;
+      vipTestResult.style.color = "var(--muted)";
+      vipTestResult.textContent = "Checking via rpc/verify_vip_code...";
+
+      try {
+        const cleanBase = SUPABASE_BASE_URL.replace(/\/+$/, "");
+        const res = await fetch(`${cleanBase}/rpc/verify_vip_code`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ input_code: code })
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `HTTP ${res.status}`);
+        }
+
+        const isValid = await res.json();
+        if (isValid === true) {
+          vipTestResult.style.color = "var(--green)";
+          vipTestResult.textContent = `Active code confirmed: ${code}`;
+        } else {
+          vipTestResult.style.color = "#ff8a8e";
+          vipTestResult.textContent = `Invalid or inactive code: ${code}`;
+        }
+      } catch (err) {
+        vipTestResult.style.color = "#ff8a8e";
+        vipTestResult.textContent = `RPC error: ${err.message}`;
+      } finally {
+        testVipCodeBtn.disabled = false;
+      }
     }
 
     async function sbFetch(queryPath, options = {}) {
